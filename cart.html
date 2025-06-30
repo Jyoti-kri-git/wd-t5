@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cart - MyBrand Store</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles/style.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand" href="./home.html">MyBrand</a>
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Products</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link position-relative" href="wishlist.html">
+                <i class="bi bi-heart fs-5"></i>
+                <span
+                  id="wishlistCountBadge"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning"
+                >
+                  0
+                </span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link position-relative" href="cart.html">
+                <i class="bi bi-cart3 fs-5"></i>
+                <span
+                  id="cartCountBadge"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                >
+                  0
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container mt-4">
+      <h2 class="mb-4">Your Cart</h2>
+      <div id="cartItems" class="row g-4"></div>
+      <hr />
+      <div class="d-flex justify-content-between align-items-center">
+        <h4>Total: $<span id="cartTotal">0</span></h4>
+        <a
+          href="./checkout.html"
+          id="checkoutBtn"
+          class="btn btn-success checkout-btn"
+          >Proceed to Checkout</a
+        >
+      </div>
+    </div>
+
+    <script>
+      const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+      const cartList = document.getElementById("cartItems");
+      const totalEl = document.getElementById("cartTotal");
+      let total = 0;
+
+      if (cartItems.length === 0) {
+        cartList.innerHTML = "<p>Your cart is empty.</p>";
+        const checkoutBtn = document.getElementById("checkoutBtn");
+        checkoutBtn.classList.add("disabled");
+        checkoutBtn.setAttribute("aria-disabled", "true");
+        checkoutBtn.addEventListener("click", (e) => e.preventDefault());
+      } else {
+        cartItems.forEach((item, index) => {
+          total += item.price;
+          const col = document.createElement("div");
+          col.className = "col-md-4";
+          col.innerHTML = `
+        <div class="card h-100">
+          <img src="${item.thumbnail}" class="card-img-top" alt="${item.title}">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">${item.title}</h5>
+            <p class="card-text">$${item.price}</p>
+            <div class="mt-auto d-flex justify-content-between">
+              <button class="btn btn-danger" onclick="removeFromCart(${index})">Remove</button>
+              <button class="btn btn-outline-warning" onclick="moveToWishlist(${index})">
+                <i class="bi bi-heart"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+          cartList.appendChild(col);
+        });
+      }
+
+      totalEl.textContent = total.toFixed(2);
+
+      function removeFromCart(index) {
+        cartItems.splice(index, 1);
+        localStorage.setItem("cart", JSON.stringify(cartItems));
+        location.reload();
+      }
+
+      function moveToWishlist(index) {
+        const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+        const product = cartItems[index];
+
+        if (!wishlist.some((p) => p.id === product.id)) {
+          wishlist.push(product);
+          localStorage.setItem("wishlist", JSON.stringify(wishlist));
+        }
+
+        cartItems.splice(index, 1);
+        localStorage.setItem("cart", JSON.stringify(cartItems));
+
+        showToast("Moved to Wishlist!");
+        setTimeout(() => location.reload(), 800);
+      }
+
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const badge = document.getElementById("cartCountBadge");
+      if (badge) badge.textContent = cart.length;
+
+      const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+      const wishlistBadge = document.getElementById("wishlistCountBadge");
+      if (wishlistBadge) wishlistBadge.textContent = wishlist.length;
+
+      function showToast(message) {
+        const toast = document.createElement("div");
+        toast.className =
+          "toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-4";
+        toast.setAttribute("role", "alert");
+        toast.setAttribute("aria-live", "assertive");
+        toast.setAttribute("aria-atomic", "true");
+        toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+        document.body.appendChild(toast);
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+
+        setTimeout(() => {
+          toast.remove();
+        }, 3000);
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  </body>
+</html>
